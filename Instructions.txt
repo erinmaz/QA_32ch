@@ -1,0 +1,51 @@
+UPDATED Jan 5, 2018 for 32ch coil 
+Questions? Problems? Changes? Email: erinmaz@gmail.com
+
+
+################## SCANNING ################################
+
+Use date (e.g., 20151020) as patient last name
+Patient ID: 3TRES_XX (XX = initials) - exam # will be included automatically on Development node
+Exam description: Development
+Use Protocol Pike - KS - QA 32 ch*** This needs to be backed up
+Setup - save - run CAL, BOLD and epiRTmeasl.  No need for Loc
+
+
+################## COPY DATA ################################
+
+Data should appear in: smb://AcademicFS.uc.ucalgary.ca/pcanlab/DEVELOPMENT
+Copy data to local QAdata folder (/Users/pikelab/QAdata)
+
+
+################## CONVERT AND ANALYSE DATA ####################
+
+Open terminal
+Type: cd QAdata/3TRES_XX-YYYYY 
+where XX = initials, YYYYY = exam #. You are changing to the directory to data directory you just exported
+Type: QA.sh . 
+
+This will bring up FSLview, so you can scroll through the volumes and look at the images for BOLD,epiRLTmeasl.e01, epiRTmeasl.e02. Once you have looked at a few, you will become familiar with what they look like and may be able to identify problems by eye.
+
+It will append a line to the QA_BOLD.txt and QA_epiTRTmeasl.txt files, which is a comma separated values file which can be imported into a spreadsheet, some values calculated/graphed. These should be backed up somewhere.
+
+
+############### DONE! ##############################################
+
+
+
+****************************
+MASK CREATION DETAILS:
+fslroi BOLD BOLDmask 0 1
+fslroi epiRTmeasl.e02 epiRTmeaslmask 0 1
+fslmaths BOLDmask -thr 1000 -bin BOLDmask
+fslmaths epiRTmeasl -thr 4000 -bin epiRTmeaslmask
+
+
+In matlab: ‘makeghostmasks.m’ 
+
+JAN 2018:
+fslmaths BOLD_n2_ghost.nii -sub BOLDmask.nii -thr 0 -eroF BOLD_n2_ghost_final
+fslmaths epiRTmeasl_n2_ghost -sub epiRTmeaslmask -thr 0 -eroF epiRTmeasl_n2_ghost_final
+fslmaths BOLDmask.nii -kernel sphere 15 -dilM -sub 1 -mul -1 -sub BOLD_n2_ghost_final -thr 0 BOLDnoise
+fslmaths epiRTmeaslmask.nii -kernel sphere 15 -dilM -sub 1 -mul -1 -sub epiRTmeasl_n2_ghost_final -thr 0 epiRTmeaslnoise
+****************************
